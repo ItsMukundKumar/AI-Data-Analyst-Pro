@@ -21,4 +21,4 @@ class ChartConfig(BaseModel):
 class ChartPlan(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    charts: list[ChartConfig] = Field(min_length=4, max_length=8)
+    charts: list[ChartConfig] = Field(min_length=6, max_length=15)

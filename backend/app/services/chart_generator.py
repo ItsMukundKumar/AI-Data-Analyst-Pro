@@ -105,7 +105,7 @@ Return ONLY valid JSON using this exact structure:
 
 STRICT CHART GENERATION RULES:
 
-1. Generate between 4 and 8 charts ONLY when the dataset contains enough valid columns and meaningful analytical opportunities. Never create meaningless charts just to reach the minimum.
+1. Generate between 6 and 15 charts ONLY when the dataset contains enough valid columns and meaningful analytical opportunities. Never create meaningless charts just to reach the minimum.
 
 2. Use ONLY columns explicitly listed in the provided metadata. Column names must match exactly, including spelling, capitalization, spaces, and special characters.
 
