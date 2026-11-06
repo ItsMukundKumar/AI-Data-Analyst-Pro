@@ -1,0 +1,91 @@
+
+# ==============================
+# Environment variables and secrets
+# ==============================
+.env
+.env.*
+!.env.example
+
+# ==============================
+# Python
+# ==============================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+ENV/
+.python-version
+
+# ==============================
+# Python testing and coverage
+# ==============================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# ==============================
+# Jupyter Notebook
+# ==============================
+.ipynb_checkpoints/
+
+# ==============================
+# IDE and editors
+# ==============================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ==============================
+# Operating system
+# ==============================
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ==============================
+# Logs
+# ==============================
+*.log
+logs/
+
+# ==============================
+# Temporary files
+# ==============================
+*.tmp
+*.bak
+*.orig
+
+# ==============================
+# Generated datasets and uploads
+# ==============================
+uploads/
+temp/
+tmp/
+*.csv
+*.xlsx
+*.xls
+
+# ==============================
+# Generated visualizations
+# ==============================
+generated/
+output/
+*.png
+*.jpg
+*.jpeg
+
+# ==============================
+# Node.js (if used by frontend tools)
+# ==============================
+node_modules/
+dist/
+build/
+npm-debug.log*
+yarn-debug.log*

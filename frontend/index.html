@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Data Analyst Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://unpkg.com/lucide@0.468.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.35.2/plotly.min.js"></script>
+  </head>
+  <body>
+    <header class="nav">
+      <a class="brand" href="#" id="brand"
+        ><i data-lucide="bar-chart-3"></i> AI Data Analyst Pro</a
+      >
+      
+      <nav id="appNav" class="hidden">
+        <button class="tab active" data-view="dashboard">Dashboard</button>
+        <button class="tab" data-view="analysis">AI Analysis</button>
+        <button class="tab" id="newDataset">Upload New Dataset</button>
+      </nav>
+      <span id="fileBadge" class="badge hidden" title="Current dataset"></span>
+    </header>
+
+    <main>
+      <!-- LANDING + UPLOAD -->
+      <div id="landing">
+        <section class="hero">
+          <h1>AI Data Analyst Pro</h1>
+          <p class="tagline">Turn Raw Data Into Meaningful Insights.</p>
+          <p class="lead">
+            Upload your dataset, generate intelligent visualizations, explore
+            interactive dashboards, and discover meaningful business insights
+            using AI.
+          </p>
+          <button class="btn primary lg" id="startBtn">Start Analyzing</button>
+        </section>
+
+        <section class="wrap">
+          <h2>What you can do</h2>
+          <div class="grid cols3">
+            <div class="card">
+              <i data-lucide="upload-cloud"></i>
+              <h3>Upload CSV and Excel</h3>
+              <p>Bring in .csv, .xlsx and .xls files.</p>
+            </div>
+            <div class="card">
+              <i data-lucide="sparkles"></i>
+              <h3>Automatic cleaning</h3>
+              <p>Missing values and duplicates are handled for you.</p>
+            </div>
+            <div class="card">
+              <i data-lucide="search-check"></i>
+              <h3>Intelligent analysis</h3>
+              <p>Column types and statistics are extracted automatically.</p>
+            </div>
+            <div class="card">
+              <i data-lucide="pie-chart"></i>
+              <h3>AI chart generation</h3>
+              <p>The AI picks charts that suit your data.</p>
+            </div>
+            <div class="card">
+              <i data-lucide="layout-dashboard"></i>
+              <h3>Interactive dashboards</h3>
+              <p>Zoom, download and view charts full screen.</p>
+            </div>
+            <div class="card">
+              <i data-lucide="lightbulb"></i>
+              <h3>AI business insights</h3>
+              <p>Read a written report on what your data shows.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="wrap">
+          <h2>How it works</h2>
+          <ol class="steps">
+            <li><b>Upload dataset</b><span>Drop in your file.</span></li>
+            <li>
+              <b>Clean and analyze</b><span>We tidy and profile the data.</span>
+            </li>
+            <li>
+              <b>Generate charts</b><span>AI builds the visualizations.</span>
+            </li>
+            <li><b>Get insights</b><span>Read the AI-written report.</span></li>
+          </ol>
+        </section>
+
+        <section class="wrap" id="uploadSection">
+          <h2>Upload your dataset</h2>
+          <div id="drop" class="drop" tabindex="0">
+            <i data-lucide="file-spreadsheet"></i>
+            <p><b>Drag and drop your file here</b></p>
+            <p class="muted">CSV, XLSX or XLS</p>
+            <button class="btn" id="browseBtn" type="button">
+              Browse files
+            </button>
+            <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" hidden />
+          </div>
+          <div id="fileInfo" class="card file hidden">
+            <div>
+              <b id="fileName"></b>
+              <div class="muted" id="fileSize"></div>
+            </div>
+            <div class="row">
+              <button class="btn primary" id="analyzeBtn">
+                Analyze dataset
+              </button>
+              <button class="btn" id="resetFile">Remove</button>
+            </div>
+          </div>
+          <div id="progress" class="card hidden">
+            <div class="bar"><div id="barFill"></div></div>
+            <ul id="stepList" class="stepList"></ul>
+          </div>
+          <div id="uploadError" class="alert hidden" role="alert"></div>
+        </section>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div id="dashboard" class="wrap hidden view">
+        <div class="grid cols4" id="summary"></div>
+        <div class="row between">
+          <h2>Charts</h2>
+          <button class="btn" id="dlDashboard">
+            <i data-lucide="download"></i> Download dashboard PNG
+          </button>
+        </div>
+        <div id="charts" class="grid cols2"></div>
+      </div>
+
+      <!-- ANALYSIS -->
+      <div id="analysis" class="wrap hidden view">
+        <div class="row between">
+          <h2>AI Analysis</h2>
+          <div class="row">
+            <button class="btn" id="regen">
+              <i data-lucide="refresh-cw"></i> Regenerate analysis
+            </button>
+            <button class="btn primary" id="dlReport" disabled>
+              <i data-lucide="download"></i> Download report
+            </button>
+          </div>
+        </div>
+        <div id="analysisBody" class="card report"></div>
+      </div>
+    </main>
+    <div id="toasts"></div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/analysis.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
