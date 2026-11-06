@@ -10,7 +10,7 @@ ENV_FILE = BASE_DIR / ".env"
 
 class Settings(BaseSettings):
     MAX_FILE_SIZE_MB: int = 50
-    SESSION_TTL_MINUTES: int = 30
+    SESSION_TTL_MINUTES: int = 120
 
     GROQ_API_KEY: str | None = None
     GROQ_MODEL: str | None = None
