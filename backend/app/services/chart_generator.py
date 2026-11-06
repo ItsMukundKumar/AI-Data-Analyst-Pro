@@ -103,7 +103,7 @@ Return ONLY valid JSON using this exact structure:
 }}
 
 RULES:
-1. Generate between 1 and 8 useful charts.
+1. Generate between 6 and 15 useful charts.
 2. Use only columns that exist in the metadata.
 3. Supported chart types: bar, line, pie, scatter, histogram, box.
 4. Histogram: numerical X column, null Y column.
