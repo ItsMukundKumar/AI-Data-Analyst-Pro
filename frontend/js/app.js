@@ -151,6 +151,7 @@ async function runAnalysis() {
 /* ---------- wiring ---------- */
 document.addEventListener("DOMContentLoaded", () => {
   if (window.lucide) lucide.createIcons();
+  Charts.bindTools();
   const drop = $("drop");
   $("startBtn").onclick = () => $("uploadSection").scrollIntoView({ behavior: "smooth" });
   $("brand").onclick = e => { e.preventDefault(); if (!state.sessionId) window.scrollTo({ top: 0, behavior: "smooth" }); };
@@ -166,7 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".tab[data-view]").forEach(t => t.onclick = () => showView(t.dataset.view));
   $("newDataset").onclick = () => resetAll();
   $("regen").onclick = runAnalysis;
-  $("dlDashboard").onclick = () => Charts.downloadDashboard(state.charts, state.filename)
+  $("dlDashboard").onclick = () => Charts.downloadDashboard(state.filename)
     .then(() => toast("Dashboard PNG downloaded.", "success")).catch(e => toast(e.message, "error"));
   $("dlReport").onclick = () => {
     const blob = new Blob([`AI Analysis Report: ${state.filename}\n\n${Analysis.toText(state.report)}`], { type: "text/plain" });
