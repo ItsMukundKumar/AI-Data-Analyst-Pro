@@ -1,13 +1,13 @@
 import base64
 import logging
 
-logger = logging.getLogger(__name__)
-
 from fastapi import APIRouter, HTTPException
 
 from app.utils.session_manager import get_session
-from app.services.chart_visualizer import generate_chart_image
+from app.services.chart_visualizer import generate_chart_image, generate_chart_figure
 from app.services.dashboard_builder import create_dashboard_image
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["Chart Visualization"])
 
@@ -38,9 +38,22 @@ def visualize_dataset(session_id: str):
             try:
                 logger.info("Generating chart %s: %s", index + 1, chart.get("title"))
 
+                # Static PNG: still needed for the dashboard image sent to Gemini.
                 image_bytes = generate_chart_image(df, chart)
 
                 chart_images.append(image_bytes)
+
+                # Interactive Plotly figure for the frontend.
+                # If it fails, only this chart falls back to the PNG.
+                try:
+                    figure = generate_chart_figure(df, chart)
+                except Exception:
+                    logger.exception(
+                        "Plotly figure failed for chart %s: %s",
+                        index + 1,
+                        chart.get("title"),
+                    )
+                    figure = None
 
                 chart_results.append(
                     {
@@ -51,6 +64,7 @@ def visualize_dataset(session_id: str):
                             "data:image/png;base64,"
                             + base64.b64encode(image_bytes).decode("utf-8")
                         ),
+                        "plotly": figure,
                     }
                 )
 
