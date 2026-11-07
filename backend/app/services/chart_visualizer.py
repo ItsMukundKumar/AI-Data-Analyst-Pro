@@ -1,3 +1,4 @@
+import json
 from io import BytesIO
 
 import matplotlib
@@ -6,9 +7,9 @@ matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
-import json
 import plotly.express as px
+import seaborn as sns
+
 from app.services.chart_data_preparer import prepare_chart_data
 
 # Modern dashboard theme
@@ -26,6 +27,7 @@ COLORS = {
     "teal": "#14B8A6",
 }
 
+# Colors for the static PNG charts (matplotlib)
 PALETTE = [
     "#6366F1",
     "#06B6D4",
@@ -252,102 +254,144 @@ def generate_chart_image(df: pd.DataFrame, chart: dict) -> bytes:
         plt.close(fig)
 
 
-MAX_POINTS = 5000  # keeps the JSON response small
-
-
-def generate_chart_figure(df, chart: dict) -> dict:
-    """Build an interactive Plotly figure and return it as a JSON-safe dict."""
-    kind = str(chart["chart_type"]).lower()
-    x = chart.get("x")  # <- replace with the real key names from your chart_config
-    y = chart.get("y")
-    title = chart["title"]
-
-    if kind == "bar":
-        fig = px.bar(df, x=x, y=y, title=title)
-    elif kind == "line":
-        fig = px.line(df.sort_values(x), x=x, y=y, title=title)
-    elif kind == "pie":
-        fig = px.pie(df, names=x, values=y, title=title)
-    elif kind == "scatter":
-        d = df.sample(MAX_POINTS, random_state=0) if len(df) > MAX_POINTS else df
-        fig = px.scatter(d, x=x, y=y, title=title)
-    elif kind == "histogram":
-        fig = px.histogram(df, x=x, title=title)
-    elif kind in ("box", "box_plot", "boxplot"):
-        fig = px.box(df, x=x, y=y, title=title)
-    else:
-        raise ValueError(f"Unsupported chart type: {kind}")
-
-    fig.update_layout(template="plotly_white", margin=dict(l=40, r=20, t=50, b=40))
-    return json.loads(fig.to_json())
-
+# ---------------------------------------------------------------
+# Interactive Plotly figures (sent to the frontend as JSON)
+# ---------------------------------------------------------------
 
 MAX_POINTS = 5000  # sample large scatter plots so the response stays small
-TOP_N = 20  # max categories shown in bar and pie charts
+
+# >>> Change the interactive chart colors here (the PNG colors use PALETTE above). <<<
+PLOTLY_PALETTE = [
+    "#4F46E5",
+    "#06B6D4",
+    "#F59E0B",
+    "#10B981",
+    "#EF4444",
+    "#8B5CF6",
+    "#EC4899",
+    "#14B8A6",
+    "#F97316",
+    "#3B82F6",
+]
+CONTINUOUS_SCALE = "Viridis"  # scatter color scale; try "Plasma", "Turbo", "Sunsetdark"
 
 
-def _aggregate(df, x, y, agg):
-    """Group by x using the chart's aggregation. Returns (data, value_column)."""
-    if agg == "count" or y is None:
-        data = df.groupby(x).size().reset_index(name="count")
-        return data, "count"
-    data = df.groupby(x, as_index=False)[y].agg(agg)
-    return data, y
+def generate_chart_figure(df: pd.DataFrame, chart: dict) -> dict:
+    """Build an interactive Plotly figure with the same data as the PNG chart."""
 
-
-def generate_chart_figure(df, chart: dict) -> dict:
-    """Build an interactive Plotly figure (hover values, zoom, legend) as a JSON dict."""
     kind = chart["chart_type"]
     title = chart.get("title", "")
-    x = chart.get("x_column")
+    x = chart["x_column"]
     y = chart.get("y_column")
-    agg = chart.get("aggregation") or "none"
 
-    for name in (x, y):
-        if name is not None and name not in df.columns:
-            raise ValueError(f"Column '{name}' not found in dataset.")
-    if x is None:
-        raise ValueError(f"No x_column in chart config: {list(chart.keys())}")
+    # Reuse the same data preparation as the PNG chart so both always match.
+    chart_df = prepare_chart_data(df, chart)
+
+    has_value = "value" in chart_df.columns
+    value = "value" if has_value else y
+
+    if kind in ("bar", "line", "pie") and value is None:
+        raise ValueError(f"{kind} chart has no value column to plot.")
+
+    # Same y-axis label rule as the PNG bar chart.
+    y_label = (
+        "Count"
+        if y is None
+        else (chart.get("aggregation", "").capitalize() if has_value else y)
+    )
 
     if kind == "bar":
-        if agg != "none" or y is None:
-            data, val = _aggregate(df, x, y, agg if agg != "none" else "count")
-            data = data.nlargest(TOP_N, val)
-        else:
-            data, val = df.head(50), y  # no aggregation: plot raw rows
-        fig = px.bar(data, x=x, y=val, title=title)
+        data = chart_df.assign(**{x: chart_df[x].astype(str)})  # one color per bar
+        fig = px.bar(
+            data,
+            x=x,
+            y=value,
+            color=x,
+            color_discrete_sequence=PLOTLY_PALETTE,
+            title=title,
+        )
+        fig.update_layout(showlegend=False, yaxis_title=y_label)
 
     elif kind == "line":
-        if y is None:
-            raise ValueError("Line chart needs y_column.")
-        if agg != "none":
-            data, val = _aggregate(df, x, y, agg)
-        else:
-            data, val = df, y
-        fig = px.line(data.sort_values(x), x=x, y=val, title=title)
-        fig.update_layout(hovermode="x unified")
+        fig = px.line(
+            chart_df.sort_values(x),
+            x=x,
+            y=value,
+            markers=True,
+            color_discrete_sequence=PLOTLY_PALETTE,
+            title=title,
+        )
+        fig.update_traces(line=dict(width=3))
+        fig.update_layout(hovermode="x unified", yaxis_title=y_label)
 
     elif kind == "pie":
-        # A pie always needs one value per slice, so aggregate (default: count).
-        data, val = _aggregate(
-            df, x, y, agg if agg != "none" else ("sum" if y else "count")
+        fig = px.pie(
+            chart_df,
+            names=x,
+            values=value,
+            hole=0.4,
+            color_discrete_sequence=PLOTLY_PALETTE,
+            title=title,
         )
-        fig = px.pie(data.nlargest(TOP_N, val), names=x, values=val, title=title)
 
     elif kind == "scatter":
         if y is None:
             raise ValueError("Scatter chart needs y_column.")
-        d = df.sample(MAX_POINTS, random_state=0) if len(df) > MAX_POINTS else df
-        fig = px.scatter(d, x=x, y=y, title=title)
+        d = (
+            chart_df.sample(MAX_POINTS, random_state=0)
+            if len(chart_df) > MAX_POINTS
+            else chart_df
+        )
+        fig = px.scatter(
+            d,
+            x=x,
+            y=y,
+            color=y,
+            opacity=0.75,
+            color_continuous_scale=CONTINUOUS_SCALE,
+            title=title,
+        )
 
     elif kind == "histogram":
-        fig = px.histogram(df, x=x, title=title)
+        fig = px.histogram(
+            chart_df,
+            x=x,
+            nbins=20,
+            color_discrete_sequence=[PLOTLY_PALETTE[1]],
+            title=title,
+        )
+        fig.update_traces(marker_line_color="white", marker_line_width=1)
+        fig.update_layout(yaxis_title="Frequency")
 
     elif kind == "box":
-        fig = px.box(df, x=x if y else None, y=y or x, title=title)
+        if y is None:
+            raise ValueError("Box plot needs y_column.")
+        if chart_df[x].nunique() <= 15:
+            data = chart_df.assign(**{x: chart_df[x].astype(str)})
+            fig = px.box(
+                data,
+                x=x,
+                y=y,
+                color=x,
+                color_discrete_sequence=PLOTLY_PALETTE,
+                title=title,
+            )
+            fig.update_layout(showlegend=False)
+        else:
+            fig = px.box(
+                chart_df,
+                y=y,
+                color_discrete_sequence=[PLOTLY_PALETTE[0]],
+                title=title,
+            )
 
     else:
         raise ValueError(f"Unsupported chart type: {kind}")
 
-    fig.update_layout(template="plotly_white", margin=dict(l=40, r=20, t=50, b=40))
-    return json.loads(fig.to_json())
+    fig.update_layout(
+        template="plotly_white",
+        margin=dict(l=40, r=20, t=50, b=40),
+        font=dict(family="Manrope, Arial, sans-serif"),
+    )
+
+    return json.loads(fig.to_json())  # safe for NaN, dates and numpy values
